@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!--filter right-->
+<div class="filterbar">
+
+    <h3 style="text-align:center; margin-top:10px;">ตัวกรองข้อมูล</h3>
+
+    <p><b>อาชีพ</b></p>
+    <div class="filter-menu job-btn" data-job="แพทย์" onclick="toggleJob('แพทย์',this)">แพทย์</div>
+    <div class="filter-menu job-btn" data-job="พยาบาลวิชาชีพ" onclick="toggleJob('พยาบาลวิชาชีพ',this)">พยาบาลวิชาชีพ</div>
+    <div class="filter-menu job-btn" data-job="ทันตแพทย์" onclick="toggleJob('ทันตแพทย์',this)">ทันตแพทย์</div>
+    <div class="filter-menu job-btn" data-job="เภสัชกร" onclick="toggleJob('เภสัชกร',this)">เภสัชกร</div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,2fr);margin-top:20px;">
+        <p><b>เขตสุขภาพ</b></p>
+        <select id="regionSelect" class="filter-box">
+            <option value="">ทั้งหมด</option>{% for i in range(1,14) %}
+            <option value="{{i}}">เขต {{i}}</option>{% endfor %}
+        </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,2fr);margin-top:10px;">
+        <p><b>จังหวัด</b></p>
+        <select id="provinceSelect" class="filter-box">
+            <option value="">ทั้งหมด</option>
+        </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(2,2fr);margin-top:10px;">
+        <p><b>สถานะ</b></p>
+        <select id="statusSelect" class="filter-box">
+            <option value="">ทั้งหมด</option>
+            <option value="occupied">มีคนครอง</option>
+            <option value="vacant">ตำแหน่งว่าง</option>
+        </select>
+    </div>
+
+    <button style="margin-top:30px;" class="apply-bt" onclick="applyFilter()">Apply Filter</button>
+</div>
+
+<!--data left-->
+<div style="margin-right:260px;">
+
+    <!--banner-->
+    <div style="margin-top:-20px;">
+        <img src="/static/images/banner.png" alt="Banner" width="100%" style="object-fit: cover;border-radius: 10px;">
+    </div>
+
+    <!--ที่มา-->
+    <div style="text-align: justify; margin-top:10px;">
+        <h2>Dashboard</h2>
+        <p>
+            &nbsp;&nbsp;&nbsp;ส่วนสำหรับแสดงภาพรวมข้อมูลบุคลากรทางการแพทย์ในรูปแบบกราฟ และแผนภูมิ
+            เพื่อสนับสนุนการวิเคราะห์เชิงนโยบาย และการวางแผนกำลังคน
+            ระบบแสดงข้อมูลสำคัญ เช่น จำนวนบุคลากรจำแนกตามวิชาชีพ, สถานะตำแหน่ง (มีผู้ครอง ตำแหน่งว่าง), โครงสร้างอายุ, อายุราชการ
+            การกระจายตัวตามเขตสุขภาพ และจังหวัด ค่าเฉลี่ยเงินเดือนตามระดับตำแหน่ง
+            ผู้ใช้งานสามารถกรองข้อมูลตามเงื่อนไขต่าง ๆ เช่น วิชาชีพ เขตสุขภาพ จังหวัด และสถานะตำแหน่ง เพื่อดูข้อมูลเฉพาะกลุ่มที่ต้องการ เพื่อให้เห็นภาพรวมได้รวดเร็ว
+            และช่วยสนับสนุนการตัดสินใจด้านทรัพยากรบุคคลบนพื้นฐานของข้อมูล
+        </p>
+    </div>
+
+    <hr class="underline">
+
+    <!--kpi-->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
+        <div class="box">
+            <div>บุคลากรทั้งหมด</div>
+            <h2 id="kpi-total">0</h2>
+        </div>
+
+        <div class="box">
+            <div>มีคนครอง</div>
+            <h2 id="kpi-occupied">0</h2>
+        </div>
+
+        <div class="box">
+            <div>ตำแหน่งว่าง</div>
+            <h2 id="kpi-vacant">0</h2>
+        </div>
+
+        <div class="box">
+            <div>เงินเดือนเฉลี่ย</div>
+            <h2 id="kpi-salary">0</h2>
+        </div>
+    </div>
+    <hr class="underline">
+
+    <!--เขต-->
+    <h2 class="head-toppic">ภาพรวมเขตสุขภาพ</h2>
+    <div class="chart-box">
+        <canvas id="chartRegion"></canvas>
+    </div>
+    <hr class="underline">
+
+     <!--เพศ-->
+    <h2 class="head-toppic">เพศ</h2>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+        <div class="chart-box" style="text-align: center; ">
+            <img src="/static/images/male.png" alt="Banner" width="100%" style="object-fit: cover;border-radius: 10px;">
+            <p>ชาย</p>
+            <p id="maleCount"
+               style="font-size:22px;font-weight:bold;color:#25B872; margin-top:-15px; margin-bottom:20px;">0 คน
+        </div>
+
+        <div class="chart-box" style="text-align: center;">
+            <img src="/static/images/female.png" alt="Banner" width="100%" style="object-fit: cover;border-radius: 10px;">
+            <p>หญิง</p>
+            <p id="femaleCount"
+               style="font-size:22px;font-weight:bold;color:#25B872; margin-top:-15px; margin-bottom:20px;">0 คน
+        </div>
+
+        <div>
+            <canvas id="chartGender"></canvas>
+        </div>
+    </div>
+    <hr class="underline">
+
+    <!--สายงาน-->
+    <h2 class="head-toppic">สายงาน</h2>
+    <div class="chart-box" style="gap:20px;">
+            <canvas id="chartJob"></canvas>
+    </div>
+
+    <hr class="underline">
+
+    <!--ช่วงอายุของบุคลากร-->
+    <h2 class="head-toppic">ช่วงอายุของบุคลากร</h2>
+        <div class="chart-box">
+            <canvas id="chartAge"></canvas>
+        </div>
+    <hr class="underline">
+
+    <!--ช่วงอายุงานของบุคลากร-->
+    <h2 class="head-toppic">ช่วงอายุงานของบุคลากร</h2>
+        <div class="chart-box">
+            <canvas id="chartRetire"></canvas>
+        </div>
+    <hr class="underline">
+
+    <h2 class="head-toppic">ระดับตำแหน่ง</h2>
+        <div class="chart-box">
+            <canvas id="chartJobLevel"></canvas>
+        </div>
+    <hr class="underline">
+
+    <h2 class="head-toppic">ประเภทหน่วยงาน</h2>
+        <div class="chart-box">
+            <canvas id="chartAgency"></canvas>
+        </div>
+    <hr class="underline">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/js/dashboard.js"></script>
+
+{% if error %}
+<div style="
+  margin-top:20px;
+  padding:15px;
+  background:#ffe5e5;
+  border-left:6px solid red;
+  border-radius:8px;
+  color:#900;
+  font-weight:600;
+">
+  Error: {{ error }}
+</div>
+{% endif %}
+
+{% endblock %}
+

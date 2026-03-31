@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!--banner-->
+<div style="margin-top:-20px;">
+  <img
+    src="/static/images/banner.png"
+    alt="Banner"
+    width="100%"
+    style="object-fit: cover;
+        border-radius: 10px;"
+  >
+</div>
+
+<div>
+    <p>ระบบนี้จัดทำขึ้นเพื่อประกอบโครงงานสหกิจศึกษา โดยมีวัตถุประสงค์เพื่อศึกษา และพัฒนาการประยุกต์ใช้เทคโนโลยี Machine Learning สำหรับการวิเคราะห์ข้อมูลบุคลากรทางการแพทย์ ผลลัพธ์ที่แสดงในระบบเป็นเพียงการทดลองเพื่อการศึกษาเท่านั้น ไม่ได้ใช้เป็นข้อมูลในการตัดสินใจเชิงนโยบายอย่างเป็นทางการ หากมีข้อสงสัย ข้อเสนอแนะ หรือพบข้อผิดพลาดของระบบ สามารถติดต่อได้ที่</p>
+    <p>ขอขอบคุณสำหรับการใช้งานระบบ</p>
+</div>
+
+{% if error %}
+<div style="
+  margin-top:20px;
+  padding:15px;
+  background:#ffe5e5;
+  border-left:6px solid red;
+  border-radius:8px;
+  color:#900;
+  font-weight:600;
+">
+  Error: {{ error }}
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+
+    <head>
+        <meta charset="UTF-8">
+
+        <title>MOPH HR Prediction</title>
+
+        <!-- Google Font -->
+        <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+        <!-- CSS -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    </head>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <body>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div style="margin-top:8px; text-align:center;">
+                <img src="/static/images/logomoph.png"
+                  alt="Logo"
+                  width="50%"
+                  style="object-fit: cover;"
+                >
+            </div>
+
+            <h2>MOPH Predict</h2>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="/" class="{% if request.path == '/' %}active{% endif %}">
+                        🏠 หน้าหลัก
+                    </a>
+                </li>
+                <li>
+                    <a href="/predict" class="{% if request.path == '/predict' %}active{% endif %}">
+                        📊 ทำนายความเสี่ยง
+                    </a>
+                </li>
+                <li>
+                    <a href="/dashboard" class="{% if request.path == '/dashboard' %}active{% endif %}">
+                        📈 Dashboard
+                    </a>
+                </li>
+
+                </br>
+
+                <hr style="border: 1px solid gray; width: 100%;">
+
+                </br>
+
+                <li>
+                    <a href="/contact" class="{% if request.path == '/contact' %}active{% endif %}">
+                        รายงาน
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <main class="container">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- footer -->
+        <footer style="position: fixed;bottom: 0;right: 0;width: calc(100% - 260px);height: 30px;background-color: #25B872;color: white;font-size: 14px;display: flex;align-items: center;justify-content: center;z-index: 1000;">
+          © 2026 โครงงานสหกิจศึกษา | ระบบวิเคราะห์ และพยากรณ์ความเสี่ยงการลาออกของบุคลากรทางการแพทย์
+        </footer>
+
+    </body>
+
+</html>

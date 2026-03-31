@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!--banner-->
+<div style="margin-top:-20px;">
+  <img
+    src="/static/images/banner.png"
+    alt="Banner"
+    width="100%"
+    style="object-fit: cover;
+        border-radius: 10px;"
+  >
+</div>
+
+<!--head-->
+<div style="margin-top:30px;">
+    <div style="text-align: justify; padding-right:20px; margin-top:-15px;">
+        <h2>Predict</h2>
+        <p>
+            &nbsp;&nbsp;&nbsp;ส่วนสำหรับประเมินความเสี่ยงการลาออกของบุคลากรรายบุคคล โดยผู้ใช้งานสามารถกรอกข้อมูลพื้นฐานของบุคลากร
+            และเลือกโมเดลที่ต้องการใช้ในการทำนาย ระบบจะประมวลผลและแสดงค่าความน่าจะเป็นของการลาออกในรูปแบบเปอร์เซ็นต์ พร้อมระดับความเสี่ยง
+            ระบบใช้โมเดล Machine Learning ที่พัฒนาแยกตามกลุ่มวิชาชีพ เพื่อให้การทำนายมีความแม่นยำเหมาะสมกับบริบทของแต่ละอาชีพ
+            ข้อมูลที่กรอกจะถูกประมวลผลผ่านขั้นตอนการจัดเตรียมข้อมูล ก่อนเข้าสู่กระบวนการทำนาย
+            ผลลัพธ์ที่แสดงประกอบด้วย ค่าความน่าจะเป็นในการลาออก (%) ระดับความเสี่ยง (ต่ำ ปานกลาง สูง) ข้อมูลสรุปเพื่อประกอบการตัดสินใจ
+            เพื่อช่วยให้ผู้บริหารสามารถประเมินความเสี่ยงเชิงรุก และวางแผนบริหารกำลังคนได้อย่างมีประสิทธิภาพ
+        </p>
+    </div>
+</div>
+<hr class="underline">
+
+<!--predict-->
+<h2 class="head-toppic">กรุณากรอกข้อมูลตัวอย่าง</h2>
+
+<form method="POST" action="{{ url_for('predict') }}">
+
+    <!-- 1 -->
+    <div class="form" style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+        <!-- left -->
+        <div>
+            <label>เขตสุขภาพ</label>
+            <select class="form-box" name="region" id="region">
+                <option value="1">เขต 1</option>
+                <option value="2">เขต 2</option>
+                <option value="3">เขต 3</option>
+                <option value="4">เขต 4</option>
+                <option value="5">เขต 5</option>
+                <option value="6">เขต 6</option>
+                <option value="7">เขต 7</option>
+                <option value="8">เขต 8</option>
+                <option value="9">เขต 9</option>
+                <option value="10">เขต 10</option>
+                <option value="11">เขต 11</option>
+                <option value="12">เขต 12</option>
+                <option value="13">ส่วนกลาง</option>
+            </select>
+        </div>
+
+        <!-- right -->
+        <div>
+            <label>จังหวัด</label>
+            <select class="form-box" name="province" id="province"></select>
+        </div>
+
+        <script>
+        const regionProvinceMap = {
+          "1": ["เชียงราย", "เชียงใหม่", "น่าน", "พะเยา", "แพร่", "แม่ฮ่องสอน", "ลำปาง", "ลำพูน"],
+          "2": ["ตาก", "พิษณุโลก", "เพชรบูรณ์", "สุโขทัย", "อุตรดิตถ์"],
+          "3": ["กำแพงเพชร", "นครสวรรค์", "พิจิตร", "ชัยนาท", "อุทัยธานี"],
+          "4": ["สระบุรี", "ลพบุรี", "สิงห์บุรี", "อ่างทอง", "พระนครศรีอยุธยา"],
+          "5": ["กาญจนบุรี", "ราชบุรี", "สุพรรณบุรี", "นครปฐม", "สมุทรสาคร", "สมุทรสงคราม", "เพชรบุรี", "ประจวบคีรีขันธ์"],
+          "6": ["ชลบุรี", "ระยอง", "จันทบุรี", "ตราด", "ฉะเชิงเทรา", "ปราจีนบุรี", "สระแก้ว"],
+          "7": ["ขอนแก่น", "กาฬสินธุ์", "มหาสารคาม", "ร้อยเอ็ด"],
+          "8": ["อุดรธานี", "หนองคาย", "บึงกาฬ", "สกลนคร", "นครพนม"],
+          "9": ["นครราชสีมา", "ชัยภูมิ", "บุรีรัมย์", "สุรินทร์"],
+          "10": ["อุบลราชธานี", "ยโสธร", "ศรีสะเกษ", "อำนาจเจริญ"],
+          "11": ["นครศรีธรรมราช", "กระบี่", "พังงา", "ภูเก็ต", "สุราษฎร์ธานี", "ชุมพร", "ระนอง"],
+          "12": ["สงขลา", "สตูล", "ตรัง", "พัทลุง", "ปัตตานี", "ยะลา", "นราธิวาส"],
+          "13": ["ส่วนกลาง"]
+        };
+
+        const regionSelect = document.getElementById("region");
+        const provinceSelect = document.getElementById("province");
+
+        function loadProvinces(region) {
+          provinceSelect.innerHTML = "";
+
+          if (regionProvinceMap.hasOwnProperty(region)) {
+            regionProvinceMap[region].forEach(p => {
+              const option = document.createElement("option");
+              option.value = p;
+              option.textContent = p;
+              provinceSelect.appendChild(option);
+            });
+          }
+        }
+
+        regionSelect.addEventListener("change", function () {
+          loadProvinces(this.value);
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+          loadProvinces(regionSelect.value);
+        });
+        </script>
+    </div>
+
+    <!-- 2 -->
+    <div class="form" style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+        <!-- Left -->
+        <div>
+            <label>เพศ</label>
+                <select name="gender" id="gender" class="form-box">
+                    <option value="ชาย">ชาย</option>
+                    <option value="หญิง">หญิง</option>
+                </select>
+
+            <label >อายุ</label>
+                <input name="age" type="number"
+               value="{{ form_data.age if form_data else '00000' }}" class="form-box">
+
+            <label>ประเภทบุคลากร</label>
+                <select class="form-box" name="staff_type" id="staff_type">
+                    <option value="ข้าราชการ">ข้าราชการ</option>
+                    <option value="พนักงานราชการ">พนักงานราชการ</option>
+                    <option value="พนักงานกระทรวง">พนักงานกระทรวง</option>
+                    <option value="ลูกจ้างชั่วคราว">ลูกจ้างชั่วคราว</option>
+                </select>
+
+            <label>ระดับตำแหน่ง</label>
+                <select class="form-box" name="job_level" id="job_level">
+                    <option value="เชี่ยวชาญ">เชี่ยวชาญ</option>
+                    <option value="ชำนาญการ">ชำนาญการ</option>
+                    <option value="ชำนาญการพิเศษ">ชำนาญการพิเศษ</option>
+                    <option value="ทรงคุณวุฒิ">ทรงคุณวุฒิ</option>
+                    <option value="ปฏิบัติการ">ปฏิบัติการ</option>
+                    <option value="ระดับทั่วไป">ระดับทั่วไป</option>
+                    <!--  <option value="วุฒิ ปริญญาตรี">วุฒิปริญญาตรี</option>
+                    <option value="วุฒิบัตรฯ (3 ปี) นายแพทย์">วุฒิบัตรฯ นายแพทย์</option>
+                    <option value="สายแพทย์">สายแพทย์</option>
+                    <option value="สายงานเภสัชกร (หลักสูตร 5 ปี)">สายงานเภสัชกร</option>
+                    <option value="สายงานนักวิชาการสาธารณสุข">สายงานนักวิชาการสาธารณสุข</option>
+                    <option value="สายพยาบาลวิชาชีพ">สายพยาบาลวิชาชีพ</option>
+                    <option value="สายงานสหวิชาชีพ">สายงานสหวิชาชีพ</option> -->
+                </select>
+        </div>
+
+        <!-- Right -->
+        <div>
+            <label>ตำแหน่งสายงาน</label>
+                <select class="form-box" name="job_line" id="job_line">
+                    <option value="นายแพทย์">นายแพทย์</option>
+                    <option value="พยาบาลวิชาชีพ">พยาบาลวิชาชีพ</option>
+                    <option value="ทันตแพทย์">ทันตแพทย์</option>
+                    <option value="เภสัชกร">เภสัชกร</option>
+                </select>
+
+            <label>อายุงาน</label>
+                <input name="work_years" type="number"
+               value="{{ form_data.work_years if form_data else '00000' }}" class="form-box">
+
+            <label>ประเภทตำแหน่ง</label>
+                <select class="form-box" name="job_type" id="job_type">
+                    <option value="วิชาการ">วิชาการ</option>
+                    <option value="เชี่ยวชาญพิเศษ">เชี่ยวชาญพิเศษ</option>
+                    <option value="กลุ่มวิชาชีพ">กลุ่มวิชาชีพ</option>
+                    <option value="วิชาชีพเฉพาะ">วิชาชีพเฉพาะ</option>
+                    <option value="วิชาชีพเฉพาะ(ก)">วิชาชีพเฉพาะ(ก)</option>
+                </select>
+
+            <label>ประเภทหน่วยงาน</label>
+                <select class="form-box" name="agency_type" id="agency_type">
+                    <option value="ส่วนกลาง">ส่วนกลาง</option>
+                    <option value="รพ.สต./สอ.">รพ.สต./สอ.</option>
+                    <option value="รพช.">รพช.</option>
+                    <option value="รพท.">รพท.</option>
+                    <option value="รพศ.">รพศ.</option>
+                    <option value="สสจ.">สสจ.</option>
+                    <option value="สสอ.">สสอ.</option>
+                </select>
+        </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="form" style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+        <!-- left -->
+        <div>
+            <label>เงินเดือนรวม</label>
+                <input name="salary" type="number" value="{{ form_data.salary if form_data else '00000' }}" class="form-box">
+        </div>
+
+        <!-- right -->
+        <div>
+            <label>เลือกโมเดล</label>
+                <select class="form-box" name="model" id="model"></select>
+        </div>
+    </div>
+
+    <button class="apply-bt" type="submit">🚀 Predict Risk</button>
+
+</form>
+
+{% if result %}
+<hr class="underline">
+<h2 class="head-toppic">Result</h2>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:30px;">
+
+  <!--result card-->
+  <div class="card result {{ result.color }}">
+    <h2>📊 ผลการวิเคราะห์</h2>
+
+    <div class="big">{{ result.leave }}%</div>
+    <p>โอกาสลาออก</p>
+
+    <div class="progress">
+      <div class="bar" style="width:{{ result.leave }}%"></div>
+    </div>
+
+    <p>โอกาสอยู่ต่อ: <b>{{ result.stay }}%</b></p>
+    <p>ระดับความเสี่ยง: <b>{{ result.risk }}</b></p>
+    <p>โมเดลที่ใช้: {{ result.model }}</p>
+  </div>
+
+  <!--summary card-->
+    <div class="card">
+        <ul class="summary">
+            <h2>ข้อมูลบุคคล</h2>
+            <li>เงินเดือน: {{ summary.salary }} บาท</li>
+            <li>เขต: {{ summary.region }}</li>
+            <li>สายงาน: {{ summary.job_line }}</li>
+            <li>ประเภทตำแหน่ง: {{ summary.job_type }}</li>
+            <li>ระดับ: {{ summary.job_level }}</li>
+            <li>บุคลากร: {{ summary.staff_type }}</li>
+            <li>จังหวัด: {{ summary.province }}</li>
+            <li>หน่วยงาน: {{ summary.agency_type }}</li>
+        </ul>
+    </div>
+
+</div>
+{% endif %}
+
+<script>
+const MODELS = {
+  "นายแพทย์": [
+    { value: "Logistic Regression", label: "Logistic Regression" },
+    { value: "Decision Tree", label: "Decision Tree" },
+    { value: "Random Forest", label: "Random Forest" },
+    { value: "XGBoost", label: "XGBoost" }
+  ],
+  "พยาบาลวิชาชีพ": [
+    { value: "Logistic Regression", label: "Logistic Regression" },
+    { value: "Decision Tree", label: "Decision Tree" },
+    { value: "Random Forest", label: "Random Forest" },
+    { value: "XGBoost", label: "XGBoost" }
+  ],
+  "เภสัชกร": [
+    { value: "Logistic Regression", label: "Logistic Regression" },
+    { value: "Decision Tree", label: "Decision Tree" },
+    { value: "Random Forest", label: "Random Forest" },
+    { value: "XGBoost", label: "XGBoost" }
+  ],
+  "ทันตแพทย์": [
+    { value: "Logistic Regression", label: "Logistic Regression" },
+    { value: "Decision Tree", label: "Decision Tree" },
+    { value: "Random Forest", label: "Random Forest" },
+    { value: "XGBoost", label: "XGBoost" }
+  ]
+};
+
+const jobLineSelect = document.getElementById("job_line");
+const modelSelect = document.getElementById("model");
+
+function updateModelOptions(selectedModel = null) {
+  const job = jobLineSelect.value;
+  modelSelect.innerHTML = "";
+
+  if (!MODELS[job]) {
+    modelSelect.innerHTML = "<option>ไม่พบโมเดล</option>";
+    return;
+  }
+
+  MODELS[job].forEach(m => {
+    const option = document.createElement("option");
+    option.value = m.value;
+    option.textContent = m.label;
+
+    if (selectedModel && selectedModel === m.value) {
+      option.selected = true;
+    }
+
+    modelSelect.appendChild(option);
+  });
+}
+
+jobLineSelect.addEventListener("change", () => {
+  updateModelOptions();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const savedModel = "{{ form_data.model if form_data else '' }}";
+  updateModelOptions(savedModel || "xgboost");
+});
+</script>
+
+{% if error %}
+<div style="
+  margin-top:20px;
+  padding:15px;
+  background:#ffe5e5;
+  border-left:6px solid red;
+  border-radius:8px;
+  color:#900;
+  font-weight:600;
+">
+  Error: {{ error }}
+</div>
+{% endif %}
+
+{% endblock %}

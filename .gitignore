@@ -1,0 +1,7 @@
+# ignore large files
+*.xlsx
+*.zip
+models/
+exported_model/
+.venv/
+.idea/
